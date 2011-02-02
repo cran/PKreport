@@ -69,7 +69,8 @@ PKcode <- function(filename="PKcode.txt")
         ## note
         writeLines(paste("#", one.note, sep=""), con=PK.con, sep="\n")
         ## code
-        writeLines(one.code[[1]], con=PK.con, sep="\n")
+        change.code <- gsub("pdata", .pkplot$getDataName(), one.code[[1]])
+        writeLines(change.code, con=PK.con, sep="\n")
     }
     
     on.exit(close(PK.con))

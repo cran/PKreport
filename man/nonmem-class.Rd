@@ -84,8 +84,9 @@ This creates a nonmem object containing all nonmem output.
   \bold{Standard generic methods}   
   \describe{
     \item{\code{initialize(object, output.lst, output.tab, output.dir)}:}{Object instantiation.
-    output.lst: the file name for lst file from NONMEM; output.tab: the filename for tab file from NONMEM;
-    output.dir(optional): the output directory for NONMEM including cor, cov, coi and phi files.
+    output.lst: the file name for lst file from NONMEM 7; output.tab: the filename for tab file from any NONMEM version;
+    output.dir(optional): the output directory including cor, cov, coi and phi files from NONMEM 7.
+    output.lst and output.dir only works for NONMEM 7.
 
     nonmem instances are created through \code{new("nonmem", ...)}.
     The arguments to \code{new} should include output.lst and output.tab.

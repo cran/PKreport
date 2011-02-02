@@ -43,6 +43,7 @@
     .pkcodenote <- list()
     .pkdata <- NULL
     .figno <- 0
+    .dataname <- NULL
     
     list(
             getGlobalConfig = function() return(.globalConfig),
@@ -96,6 +97,12 @@
             setPKData = function(dataset)
             {
                 .pkdata <<- dataset
+            },
+            
+            getDataName = function() return(.dataname),
+            setDataName = function(dataset)
+            {
+                .dataname <<- dataset
             },
             
             getFigNo = function() return(.figno),

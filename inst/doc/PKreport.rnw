@@ -32,8 +32,13 @@ Graphics play an important and unique role in population pharmacokinetic (PopPK)
 
 \section{Installation}
 You can install PKreport with the following command,
-\newline \newline
-\textit{install.packages("PKreport")}
+\begin{verbatim}
+install.packages("PKreport")
+\end{verbatim}
+For users who do not have administrative privilege for their computers, they can install this package in their own accounts:\begin{verbatim}
+install.packages("PKreport", lib.loc="User directory")
+library("PKreport", lib.loc="User directory")
+\end{verbatim}
 
 \section{Software implementation}
 
@@ -71,6 +76,18 @@ Currently PKreport offers console user interface to test model assumptions. It h
 efficiency and help users to generate high-quality figures, users have option to modify
 related R scripts to meet their specific requirements. All generated R scripts match the order of figures generated in function 4. 6). Modify figures. Users can also update or modify certain figures with figure ID for particular purpose. 7). Clean archives. This module will delete all archives (file directories and figures) and clean global variables in R environment. The general architecture is shown in Fig.~\ref{c2_s1_1}.
 
+\subsection{Format for input data}
+
+PKreport accepts two types of input data: data.frame or \textit{nonmem} class:
+
+\subsubsection{data.frame as input data}
+
+PKreport accepts data.frame and diagnoses model results from NONMEM, Monolix, R nlme, etc. For NONMEM, the data.frame can be read in R directly from tab file. For Monolix, there are a few output files, and users have to combine them as one single file (demonstrated in example 6). This single file is then read in R as data.frame.
+
+\subsubsection{\textit{nonmem} class as input data}
+
+\textit{nonmem} class is specifically designed for NONMEM. The option \textit{output.lst}, and \textit{ output.dir} is for NONMEM 7. The option \textit{ output.tab} is available for any NONMEM version.
+
 \section{Function description}
 This package includes 1 \textit{nonmem} class and 5 main functions:
 \begin{itemize}
@@ -104,6 +121,7 @@ This class includes the following slots:
 nonmem instances are created through \textit{new("nonmem", ...)}.
 The arguments to \textit{new} should include output.lst and output.tab.
 If output.dir is missing, NULL will be assigned to proper slots.
+The option \textit{output.lst}, and \textit{ output.dir} is for NONMEM 7. The option \textit{ output.tab} is available for any NONMEM version.
 \begin{verbatim}
 > myclass <- new("nonmem", output.lst="C:/nonmem7/KAKOE.lst",
                output.tab="C:/nonmem7/KAKOE.FITKAKOEST_PAR.FIT",
@@ -355,7 +373,37 @@ The standard output file (lst file) does not have a tabular format. There are tw
 [7,] 0e+00 5.00e-01 1.0e+06
 \end{verbatim}
 
+\subsection{Example 6}
+In the final example, I will demonstrate how to use this package for the output from Monolix. 
+These output files are ``predictions.txt'', ``indiv\_eta.txt'', ``indiv\_parameters.txt''.
 
+\begin{verbatim}
+# read in Monolix output files
+> mpred <- read.table(file.path(
+		   paste(system.file("monolix", package="PKreport"), 
+		   "predictions.txt", sep="/")),
++          header=T, sep="\t")
+> meta <- read.table(file.path(
+           paste(system.file("monolix", package="PKreport"), 
+		   "indiv_eta.txt", sep="/")),
++          header=T, sep="\t")
+> mpara <- read.table(file.path(
+		   paste(system.file("monolix", package="PKreport"), 
+		   "indiv_parameters.txt", sep="/")),
++          header=T, sep="\t")
+> 
+# combine three files together as one file
+> merge.1 <- merge(mpred, meta, by="ID")
+> mdata <- merge(merge.1, mpara, by="ID")
+> colnames(mdata) <- gsub("_", ".", colnames(mdata))
+> no.index <- which(colnames(mdata) %in% c("X.1", "X.y", "X"))
+> mdata <- mdata[, - no.index] 
+> 
+> PKdata(mdata, match.term=var.name)
+Data is read successfully.
+> PKfigure(mdata, c(3))
+> PKshow()
+\end{verbatim}
 
 \begin{figure}[h!tb] \centering
 \includegraphics[scale=0.5]{c2_s1_1.pdf}

@@ -58,6 +58,13 @@ setClass("nonmem",
 setMethod("initialize", "nonmem", function(.Object,
           output.lst, output.tab, output.dir, delim=" ",...)
 {
+    ## check the first two arguments, the third one is optional
+    if (missing(output.lst)) stop("\nNo outputfile!")
+    if (!file.exists(output.lst)) stop("\nThere is no output.lst file in this path!")
+    
+    if (missing(output.tab)) stop("\nNo raw output file!")
+    if (!file.exists(output.tab)) stop("\nThere is no output.tab file in this path!")
+   
     ## pattern for standard output
     meth.pattern <- "#METH:"
     term.pattern <- "#TERM:"
@@ -73,8 +80,7 @@ setMethod("initialize", "nonmem", function(.Object,
     phi.pattern <- ".phi"
     
 ########################output lst##################################
-    if (missing(output.lst)) stop("No outputfile!")
-    
+
     output <- readLines(output.lst, n=-1)
     file.standard <- output
     
@@ -94,7 +100,7 @@ setMethod("initialize", "nonmem", function(.Object,
     #OBJS
     objs.index <- grep(objs.pattern, output)
 
-    if (length(meth.index) == 0) stop("No method is found in output file!")
+    if (length(meth.index) == 0) stop("\nNo method is found in output file!")
 
     meth <- NULL
     ter <- list()
@@ -119,8 +125,7 @@ setMethod("initialize", "nonmem", function(.Object,
     .Object@objs <- objs
     
 ######################## output tab ##################################
-    if (missing(output.tab)) stop("No raw output file!")
-
+     
     output <- readLines(output.tab,n=1)
     .Object@tabid <- output[1]
     tabdata <- read.table(output.tab, header=T, skip=1)
@@ -129,6 +134,7 @@ setMethod("initialize", "nonmem", function(.Object,
 ########################output dir##################################
     if (!missing(output.dir))
     {
+        if (!file.exists(output.dir)) stop("\nThere is no output.dir folder in this path!")    
         all.filenames <- dir(path=output.dir)
 
         # cov
@@ -136,7 +142,13 @@ setMethod("initialize", "nonmem", function(.Object,
         cor.index <- grep(cor.pattern, all.filenames)
         coi.index <- grep(coi.pattern, all.filenames)
         phi.index <- grep(phi.pattern, all.filenames)
-
+        
+        covCheck <- length(cov.index) + length(cor.index) + length(coi.index) + length(phi.index)
+        if (covCheck == 0) 
+        {
+          stop("\nThere is no .cov, .cor, .coi or .phi file in the output.dir folder. This option only works for NONMEM 7!")
+        }
+        
         if(length(cov.index) != 0)
         {
             filename <- paste(output.dir, all.filenames[cov.index], sep="/")
@@ -216,7 +228,7 @@ setMethod("non.coi",signature(object="nonmem"), function(object) object@file.coi
 setMethod("non.phi",signature(object="nonmem"), function(object) object@file.phi)
 
 setMethod("non.select",signature(object="nonmem"), function(object, lines, sep=" ", ...) 
-         {     #browser()
+         {     
               if (missing(lines)) return(object$file.lst)         
               if (!is.numeric(lines)) stop("lines should be numeric!")
               if (length(lines)>0)

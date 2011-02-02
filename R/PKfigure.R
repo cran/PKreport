@@ -107,73 +107,6 @@ generate.plot <- function(lattice.call, lattice.string=NULL, ggplot.call,
 }
 
 
-generate.plot.old <- function(lattice.call, lattice.string=NULL, ggplot.call, ggplot.string=NULL, plot.dir)
-{
-    general.list = .pkplot$getGlobalConfig()
-
-    save.call <- switch(general.list$save.format,
-                        jpeg=jpeg,
-                        bmp=bmp,
-                        png=png,
-                        tiff=tiff,
-                        win.metafile=win.metafile)
-    if(is.null(save.call)) save.call <- "pdf"
-
-    ## save code scripts
-    if (.pkplot$getConfig("package")==0 || .pkplot$getConfig("package")==2)
-    {
-        if (!is.null(lattice.string))
-        {
-            lattice.code <- paste(lattice.call, "(", lattice.string, ")", sep="")
-
-            tmp.lattice <- list()
-            tmp.lattice[[1]] <- lattice.code
-            tmp.lattice[[2]] <- plot.dir
-            .pkplot$setPKCode(tmp.lattice)
-
-            fig.name <- addFigName(plot.dir, general.list$save.format)
-
-            try1 <- try(eval(parse(text=lattice.code)))
-            if (!inherits(try1, "try-error")) 
-            {           
-                do.call(save.call, list(file=paste("lattice", fig.name, sep="_"), width=general.list$width,
-                          height=general.list$height))
-                print(eval(parse(text=lattice.code)))
-                dev.off()
-            }
-
-        }
-    }
-
-    ## save code scripts
-    if (.pkplot$getConfig("package")==1 || .pkplot$getConfig("package")==2)
-    {   
-        if (!is.null(ggplot.string))
-        {
-
-            ggplot.code <- paste(ggplot.call, "(", ggplot.string, ")", sep="")
-            
-            tmp.lattice <- list()
-            tmp.lattice[[1]] <- ggplot.code
-            tmp.lattice[[2]] <- plot.dir
-            .pkplot$setPKCode(tmp.lattice)
-
-            fig.name <- addFigName(plot.dir, general.list$save.format)
-
-            try1 <- try(eval(parse(text=ggplot.code)))
-            if (!inherits(try1, "try-error")) 
-            {                   
-                do.call(save.call, list(file=paste("ggplot", fig.name, sep="_"), width=general.list$width,
-                          height=general.list$height))
-                print(eval(parse(text=ggplot.code)))
-                dev.off()
-            }
-        }
-    }
-
-    invisible(NULL)
-}
-
 addList1 <- function(lattice.list, ggplot.list, x)
 {
         lattice.list$x <- formula(paste("~", x, sep=""))
@@ -383,7 +316,11 @@ PKreport.1 <- function(pdata=deparse(substitute(realdata)))
         newstr <- paste("Distribution of ", colnames(pdata)[i], sep="")
         addCodeNote(newstr)
         ggplot.list.tmp <- ggplot.list
-        ggplot.list.tmp$binwidth <- round(diff(range(pdata[,colnames(pdata)[i]]))/30,2)        
+
+        bin.tmp <- round(diff(range(pdata[,colnames(pdata)[i]]))/30,5)
+        if (bin.tmp != 0) ggplot.list.tmp$binwidth <- bin.tmp
+        else ggplot.list.tmp$binwidth <- diff(range(pdata[,colnames(pdata)[i]]))/30
+
         my.list <- addList1(lattice.list, ggplot.list.tmp, colnames(pdata)[i])
 
         generate.plot(lattice.call, my.list$lattice.string, 
@@ -931,7 +868,11 @@ PKreport.5 <- function(pdata=deparse(substitute(realdata)))
       newstr <- paste("Distribution of ", match.term$WRES, sep="")
       addCodeNote(newstr)
       ggplot.list.tmp <- ggplot.list
-      ggplot.list.tmp$binwidth <- round(diff(range(pdata[,match.term$WRES]))/30,2)  
+      
+      bin.tmp <- round(diff(range(pdata[,match.term$WRES]))/30,5)
+      if (bin.tmp != 0) ggplot.list.tmp$binwidth <- bin.tmp
+      else  ggplot.list.tmp$binwidth <- diff(range(pdata[,match.term$WRES]))/30
+      
       my.list <- addList1(lattice.list, ggplot.list.tmp, match.term$WRES)
       generate.plot(lattice.call, my.list$lattice.string, 
       ggplot.call, my.list$ggplot.string, plot.dir, pdata)
@@ -943,9 +884,12 @@ PKreport.5 <- function(pdata=deparse(substitute(realdata)))
              ")",
             #", prepanel = prepanel.qqmathline, panel = function(x, ...) {panel.qqmathline(x, ...);panel.qqmath(x, ...)})",
              sep="")
-      my.list$ggplot.string <- paste("ggplot(", quote(pdata), ") + geom_point(aes(sample =",
-                                    match.term$WRES, "), stat = \"qq\", quantiles = ppoints(100))",
-                                    sep="")
+      #my.list$ggplot.string <- paste("ggplot(", quote(pdata), ") + geom_point(aes(sample =",
+      #                              match.term$WRES, "), stat = \"qq\", quantiles = ppoints(100))",
+      #                              sep="")
+      my.list$ ggplot.string <- paste("ggplot(", quote(pdata), ",aes(sample =", match.term$WRES,
+                                      ")) + stat_qq()", sep="")
+      #cat(paste("code: ", my.list$ggplot.string, sep=""))
       generate.plot(lattice.call, my.list$lattice.string, ggplot.call, my.list$ggplot.string,
                     plot.dir, pdata, paste.string=FALSE)
 
@@ -959,12 +903,26 @@ PKreport.5 <- function(pdata=deparse(substitute(realdata)))
                       "data=pdata, xlab=\"", match.term$WRES, "\")",
                      sep="")
       tmp.string1 <- paste("pdata[,\"", match.term$ID, "\"] <- factor(pdata[,\"", match.term$ID, "\"])", sep="")
-      tmp.string2 <- paste("ggplot(pdata)+geom_histogram(aes(", match.term$WRES, 
-                      "),", "binwidth=", round(diff(range(pdata[,match.term$WRES]))/30,2),
-                      ")",
-                      "+facet_wrap(~", match.term$ID, ", ncol=", as.numeric(ggplot.layout[1]),
-                      #"binwidth=", diff(range(pdata[,match.term$WRES]))/30, 
-                      ")", sep="")
+      
+      string.bin <- round(diff(range(pdata[,match.term$WRES]))/30,5)
+      if (string.bin != 0)
+      { 
+          tmp.string2 <- paste("ggplot(pdata)+geom_histogram(aes(", match.term$WRES, 
+                          "),", "binwidth=", string.bin,
+                          ")",
+                          "+facet_wrap(~", match.term$ID, ", ncol=", as.numeric(ggplot.layout[1]),
+                          #"binwidth=", diff(range(pdata[,match.term$WRES]))/30, 
+                          ")", sep="")
+      }
+      else
+      {
+          tmp.string2 <- paste("ggplot(pdata)+geom_histogram(aes(", match.term$WRES, 
+                          "),", "binwidth=", diff(range(pdata[,match.term$WRES]))/30,
+                          ")",
+                          "+facet_wrap(~", match.term$ID, ", ncol=", as.numeric(ggplot.layout[1]),
+                          #"binwidth=", diff(range(pdata[,match.term$WRES]))/30, 
+                          ")", sep="")      
+      }
       ggplot.string <- paste(tmp.string1, tmp.string2, sep=";")
       generate.plot(lattice.call, lattice.string, ggplot.call, ggplot.string,
                     plot.dir, pdata, paste.string=FALSE)
@@ -1142,7 +1100,11 @@ PKreport.6 <- function(pdata=deparse(substitute(realdata)))
           newstr <- paste("Distribution of ", match.term$PARA[i], sep="")
           addCodeNote(newstr)
           ggplot.list.tmp <- ggplot.list
-          ggplot.list.tmp$binwidth <- round(diff(range(pdata[,match.term$PARA[i]]))/30,2)
+
+          bin.tmp <- round(diff(range(pdata[,match.term$PARA[i]]))/30,5)
+          if (bin.tmp != 0) ggplot.list.tmp$binwidth <- bin.tmp
+          else ggplot.list.tmp$binwidth <- diff(range(pdata[,match.term$PARA[i]]))/30
+          
           my.list <- addList1(lattice.list, ggplot.list.tmp, match.term$PARA[i])
           generate.plot(lattice.call, my.list$lattice.string, 
           ggplot.call, my.list$ggplot.string, plot.dir, pdata)
@@ -1157,6 +1119,7 @@ PKreport.6 <- function(pdata=deparse(substitute(realdata)))
           my.list$lattice.string <- paste("qqmath(~", match.term$PARA[i], ",data=", quote(pdata), ")", sep="")
           my.list$ggplot.string <- paste("ggplot(", quote(pdata), ") + geom_point(aes(sample =",
                                     match.term$PARA[i], "), stat = \"qq\")", sep="")
+          #cat(paste("code: ", my.list$lattice.string, "\n", sep=""))
           generate.plot(lattice.call, my.list$lattice.string, 
           ggplot.call, my.list$ggplot.string, 
           plot.dir, pdata, paste.string=FALSE)
@@ -1343,7 +1306,11 @@ PKreport.8 <- function(pdata=deparse(substitute(realdata)))
           newstr <- paste("Distribution of ", match.term$ETA[i], sep="")
           addCodeNote(newstr)
           ggplot.list.tmp <- ggplot.list
-          ggplot.list.tmp$binwidth <- round(diff(range(pdata[,match.term$ETA[i]]))/30,2)          
+          
+          bin.tmp <- round(diff(range(pdata[,match.term$ETA[i]]))/30, 5)
+          if (bin.tmp != 0) ggplot.list.tmp$binwidth <- bin.tmp  
+          else ggplot.list.tmp$binwidth <- diff(range(pdata[,match.term$ETA[i]]))/30
+                  
           my.list <- addList1(lattice.list, ggplot.list.tmp, match.term$ETA[i])
           generate.plot(lattice.call, my.list$lattice.string, 
           ggplot.call, my.list$ggplot.string, plot.dir, pdata)
@@ -1454,5 +1421,8 @@ PKfigure <- function(pdata=deparse(substitute(realdata)), methods=c(1,2,3,4,5,6,
       if(file.exists("eta")) unlink(general.list$eta, recursive=TRUE)
       PKreport.8(pdata)
    }
+   
+   # set name for later to replace. Need to change.
+   .pkplot$setDataName(deparse(substitute(pdata)))
    
 }

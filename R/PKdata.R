@@ -15,11 +15,18 @@ PKdata <- function(data, match.term=NULL)
     
     ## read in data
     if (length(colnames(data))==0) stop("Data column does NOT have names!")
+
+    # check missing value
+    sapply(1:ncol(data), function(i)
+          {
+              if (all(is.na(data[,i]))) stop(paste("\nData column ", i, " are all NA values!", sep=""))
+              if (any(is.na(data[,i]))) warning(paste("\nData column ", i, " has missing values!", sep=""))
+          })
     
     ## match term
     if (is.null(match.term)) stop("Please input config list!")
     mt <- unlist(match.term)
-    PK.match <- match(mt, colnames(pdata))
+    PK.match <- match(mt, colnames(data))
     if(length(PK.match[is.na(PK.match)]) > 0) stop(paste(dQuote(mt[is.na(PK.match)]) , "in config list do NOT match data!\n", sep=" "))
 
     ## make sure WRES, RES, PRED, IPRE, DV, TIME are only one item ??
@@ -34,7 +41,7 @@ PKdata <- function(data, match.term=NULL)
     stop("Please make sure PRED and IPRE are input with only ONE variable!")
     
     .pkplot$setTerm(match.term)
-    .pkplot$setPKData(pdata)
+    .pkplot$setPKData(data)
                                   
     cat("Data is read successfully.\n")
 
