@@ -1,0 +1,18 @@
+citHeader("How to cite PKreport:")
+
+citEntry(entry = "Article",
+  author = "Xiaoyong Sun, Jun Li",
+  title = "PKreport: report generation for checking population pharmacokinetic model assumptions",
+  journal = "BMC Medical Informatics and Decision Making",
+  volume = "11",
+  year = "2011",
+  number = "1",
+  pages = "31",
+  url = "http://www.biomedcentral.com/1472-6947/11/31",
+  note = "doi:10.1186/1472-6947-11-31",
+  textVersion = "Xiaoyong Sun, Jun Li.
+                PKreport: report generation for checking population pharmacokinetic model assumptions.
+                BMC Medical Informatics and Decision Making. 2011, 11:31. 
+                doi:10.1186/1472-6947-11-31."
+)
+
