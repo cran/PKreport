@@ -22,8 +22,6 @@ PKcode(filename="PKcode.txt")
 
 \author{Xiaoyong Sun}
 
-\examples{
 
-}
 \keyword{ methods}
 

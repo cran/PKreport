@@ -14,9 +14,7 @@ PKreport.7(pdata)
   
 }
 
-\details{
 
-}
 \value{
 Input is a data frame.
 }

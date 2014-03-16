@@ -35,7 +35,7 @@ PKadjust <- function(figno, save=FALSE,...)
                             bmp=bmp,
                             png=png,
                             tiff=tiff,
-                            win.metafile=win.metafile)
+                            dev.new=dev.new)
         if(is.null(save.call)) save.call <- "pdf"
         
         tmp.dir <- getwd()

@@ -10,9 +10,6 @@
 PKclean()
 }
 
-\arguments{
-  
-}
 
 \details{   Please see vignettes for details.
 

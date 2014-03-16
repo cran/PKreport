@@ -19,14 +19,10 @@ PKadjust(figno, save=FALSE,...)
 \details{ Please see vignettes for details.
 
 }
-\value{
 
-}
 
 \author{Xiaoyong Sun}
 
-\examples{
 
-}
 \keyword{ methods}
 

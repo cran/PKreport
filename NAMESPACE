@@ -1,3 +1,7 @@
+import(methods) 
+import(lattice) 
+import(ggplot2)
+
 exportClasses("nonmem")
 exportMethods("non.lst", "non.lst.meth", "non.lst.term", "non.lst.objt", "non.lst.objv", "non.lst.objs", "non.tab", "non.cor", "non.cov", "non.coi", "non.phi", "non.select" )
 
